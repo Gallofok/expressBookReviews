@@ -58,26 +58,47 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-    const email = req.params.email;
-    let filtered_users = users.filter((user) => user.email === email);
-    if (filtered_users.length > 0) {
-        let filtered_user = filtered_users[0];
-        let DOB = req.query.DOB;
-        //if the DOB has changed
-        if(DOB) {
-            filtered_user.DOB = DOB
-        }
-        /*
-        Include code here similar to the one above for other attibutes
-        */
-        users = users.filter((user) => user.email != email);
-        users.push(filtered_user);
-        res.send(`User with the email  ${email} updated.`);
+    const isbn = req.params.isbn;
+    const username = req.query.username
+    const review = req.query.review
+    let target_books = Object.values(books).filter((book) => book.isbn === isbn);
+    if (target_books.length > 0) {
+        let tarbook = target_books[0]
+        tarbook.reviews[username] = review;
+
+        res.send(`${review} by ${username} of ${tarbook.isbn}  added.`);
     }
     else{
-        res.send("Unable to find user!");
+        res.send("Unable to find this book!");
     }
 });
+
+//deleate a keyreview by someone
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    const isbn = req.params.isbn;
+    const username = req.query.username
+    let target_books = Object.values(books).filter((book) => book.isbn === isbn);
+    
+    if (target_books.length > 0 ) {
+        let tarbook = target_books[0];
+        let allreviews = tarbook.reviews;
+        let tarview =  Object.keys(allreviews);
+        
+        if (tarview.includes(username)){
+            res.send(`reviews by ${username} of ${tarbook.isbn}  deleated.`);
+            delete tarbook.reviews.username;    
+        }
+        else{
+            res.send("Unable to find this review !");
+        }
+        
+    }
+    else{
+        res.send("Unable to find this book !");
+    }
+});
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
